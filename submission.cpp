@@ -45,10 +45,21 @@ vector<vector<int>> mySavings(vector<vector<int>>S){
 
 }
 
+int rounding(double number)
+{
+    int number1=(int)number;
+    double remaining=number-1.0*number1;
+    if(remaining>=0.5)
+    {
+        return number+1;
+    }
+    return number;
+}
+
 vector<pair<int,int>> ascendingOrder(vector<vector<int>> savings)
 {
     vector<pair<int,int>> answer;
-    cout<<"This part does work?"<<endl;
+    
     for(int x=0;x<savings.size();x++)
     {
         for(int y=0;y<savings[0].size();y++)
@@ -61,7 +72,7 @@ vector<pair<int,int>> ascendingOrder(vector<vector<int>> savings)
         }
        // cout<<"Here"<<endl;
     }
-    cout<<"This part workytuts"<<endl;
+    
      vector<pair<int,int>> answer1=answer;
     for(int x=0;x<answer.size();x++)
     {
@@ -373,7 +384,199 @@ int myRoundTripLength (vector<vector<int>> S, vector<int>Q) {
 //////////////       QUESTION 2 HERE   //////////////////
 /////////////////////////////////////////////////////////
 
+bool containsNegative(vector<double> a)
+{
+    //int count;
+    for(int x=0;x<a.size();x++)
+    {
+        if(a[x]<0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 tuple<vector<int>, vector<int>, int> mySimplexLP(vector<vector<int>> A, vector<int> B, vector<int> C) {
+vector<vector<double>>A1(A.size(),vector<double>(A[0].size(),0.0));
+vector<double> B1(B.size(),0.0);
+vector<double> C1(C.size(),0.0);
+for(int x=0;x<A.size();x++)
+{
+    for(int y=0;y<A[0].size();y++)
+    {
+        A1[x][y]=A[x][y]*1.0;
+    }
+}
+for(int x=0;x<B.size();x++)
+{
+    B1[x]=B[x]*1.0;
+}
+for(int x=0;x<C.size();x++)
+{
+    C1[x]=C[x]*1.0;
+}
+
+vector<vector<double> > simplix;
+  vector<double> zeros(A1.size(),0.0);
+  
+for(int x=0;x<A1.size();x++)
+{
+    vector<double> merge=A1[x];
+   
+    for(int x1=0;x1<zeros.size();x1++)
+    {
+        if(simplix.size()==x1)
+        {
+            merge.push_back(1.0);
+        }
+        else 
+        {
+           merge.push_back(0.0);
+        }
+    }
+    merge.push_back(B1[x]);
+    simplix.push_back(merge);
+
+}
+vector<double> merge1;
+for(int x=0;x<C1.size();x++)
+{
+    merge1.push_back(C1[x]*-1.0);
+}
+for(int x=0;x<zeros.size();x++)
+{
+    merge1.push_back(0.0);
+}
+merge1.push_back(0.0);
+simplix.push_back(merge1);
+/*for(int x=0;x<simplix.size();x++)
+{
+    for(int y=0;y<simplix[0].size();y++)
+    {
+        cout<<simplix[x][y]<<",";
+    }
+    cout<<endl;
+   
+
+}*/
+cout<<endl;
+vector<int> variables(simplix[0].size()-1,-1);
+int iterations=0;
+while(containsNegative(simplix[simplix.size()-1]))
+{
+    int column;
+    double min=simplix[simplix.size()-1][0];
+    for(int x=0;x<simplix[0].size();x++)
+    {
+        
+        if(simplix[simplix.size()-1][x]<=min)
+        {
+            min=simplix[simplix.size()-1][x];
+            column=x;
+          
+        }
+    }
+    int row;
+    int min_Row=inf;
+     min=inf;
+    for(int x1=0;x1<simplix.size()-1;x1++)
+    {
+        double number=simplix[x1][column];
+        double number1=inf;
+        if(number!=0)
+        {
+            number1=simplix[x1][simplix[0].size()-1]/number;
+        }
+        if(number1<=min && number1>0)
+        {
+      //      cout<<"Less than min"<<endl;
+            min=number1;
+            row=x1;
+        }
+    }
+    if(min==inf)
+    {
+        simplix[simplix.size()-1][column]=0;
+        continue;
+    }
+    //row=min_Row;
+    //if(row!=-1 && column!=-1)
+    //{
+      variables[column]=row;
+   // }
+
+    //cout<<row<<","<<column<<","<<iterations<<endl;
+    iterations++;
+     if(column==-1 || row==-1)
+     {
+         continue;
+     }
+    double divider=simplix[row][column];
+    for(int f=0;f<simplix[row].size();f++)
+    {
+        simplix[row][f]=simplix[row][f]/divider;
+    }
+    for(int g=0;g<simplix.size();g++)
+    {
+        double divider2=simplix[g][column]/simplix[row][column];
+        for(int x1=0;x1<simplix[0].size();x1++)
+        {
+            if(g!=row)
+            {
+            simplix[g][x1]=simplix[g][x1]-divider2*simplix[row][x1];
+            }
+        }
+    }
+  /*for(int x=0;x<simplix.size();x++)
+{
+    for(int y=0;y<simplix[0].size();y++)
+    {
+        cout<<simplix[x][y]<<",";
+    }
+    cout<<endl;
+}*/
+//cout<<endl;
+
+}
+
+vector<int> solutions;
+vector<int> slacks;
+int optimization;
+
+for(int x=0;x<variables.size();x++)
+{
+    int record=variables[x];
+    if(record==-1)
+    {
+      if(x<A1[0].size())
+      {
+       solutions.push_back(0);
+      }
+
+      else
+      {
+          slacks.push_back(0);
+      }
+    }
+    else
+    {
+        if(x<A1[0].size()){
+           solutions.push_back(rounding(simplix[record][simplix[0].size()-1]));}
+        else
+        {
+            slacks.push_back(rounding(simplix[record][simplix[0].size()-1]));
+        }
+    }
+}
+
+ /*for(int i=0;i<variables.size();i++)
+ {
+     cout<<variables[i]<<",";
+ }*/
+ //cout<<endl;
+ optimization=simplix[simplix.size()-1][simplix[0].size()-1];
+  return make_tuple(solutions,slacks,optimization);
 /*
     TODO:
 
@@ -390,3 +593,4 @@ tuple<vector<int>, vector<int>, int> mySimplexLP(vector<vector<int>> A, vector<i
         int value: objective value of the optimal solution
   */
 }
+
